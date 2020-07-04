@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "614590097933",
+    "firebase_url": "https://sosimple-furtledemo.firebaseio.com",
+    "project_id": "sosimple-furtledemo",
+    "storage_bucket": "sosimple-furtledemo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:614590097933:android:de35b098815c6ef5b3c344",
+        "android_client_info": {
+          "package_name": "com.sosimple.furtle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "614590097933-9rsf2vcbn4thov7np2iqbvjvd7k4imm7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-wv3_atTdH4vuCydcLUfnISrDk_PLRlg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "614590097933-1g94udrs4unnvucpp54bn5q8eu6rpdco.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:614590097933:android:70a1f0c9b083717cb3c344",
+        "android_client_info": {
+          "package_name": "com.sosimple.furtledemo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "614590097933-9rsf2vcbn4thov7np2iqbvjvd7k4imm7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-wv3_atTdH4vuCydcLUfnISrDk_PLRlg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "614590097933-1g94udrs4unnvucpp54bn5q8eu6rpdco.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

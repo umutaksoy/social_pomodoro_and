@@ -1,3 +1,65 @@
 <resources>
-    <string name="app_name">Furtle</string>
+
+<!--application name-->
+<string name="app_name">Furtle</string>
+
+<!--ActivityRoom strings -->
+<string name="working_text">It\'s Working Time</string>
+<string name="resting_text">It\'s Resting Time</string>
+
+<string name="username_empty">…</string>
+
+<string name="room_signin_message">Sign In to see Online Users</string>
+<!--SharedPref Keys -->
+<string name="shared_pref_pom_date">ACTUALPOMODORODATE</string>
+<string name="shared_pref_pom_count">ACTUALPOMODOROCOUNT</string>
+
+<!--MyUser-->
+<string name="sharedpref_email">MyUserEmail</string>
+<string name="sharedpref_name">MyUserName</string>
+<string name="sharedpref_image">MyUserImage</string>
+<string name="sharedpref_login">IsLoggedIn</string>
+
+<!--AdMob-->
+<string name="admob_publisher_id">pub-3940256099942544</string>
+<string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+<string name="admob_banner_unit_id"></string>
+<string name="admob_interstitial_unit_id"></string>
+<string name="admob_native_unit_id"></string>
+
+<!-- play store application link i.e more apps -->
+<string name="play_more_apps">https://play.google.com/store/apps/developer?id=sosimple.tech</string>
+<string name="privacy_policy_url"></string>
+
+<!--network & error message-->
+<string name="whops">Whoops!</string>
+<string name="network_required">Required Internet!</string>
+<string name="failed_title_text">Whoops!</string>
+<string name="failed_text">There is a problem with your network or the server is currently down, please try it again later.</string>
+<string name="no_internet_text">There is a problem with your network or the server is currently down, please try it again later.</string>
+<string name="msg_no_item">It looks like there are no content available at this time.</string>
+<string name="msg_search_input">Please Insert Keyword</string>
+<string name="no_post_found">Not Found!</string>
+
+<!--bottom navigation title-->
+<string name="title_nav_home">Home</string>
+<string name="title_nav_profile">Account</string>
+
+<!--favorite-->
+<string name="favorite_add">Add to Favorite</string>
+<string name="favorite_remove">Remove from Favorite</string>
+<string name="favorite_added">Added to Favorite</string>
+<string name="favorite_removed">Removed from Favorite</string>
+<string name="no_favorite_found">Your favorite list is empty because you don\'t add any videos in the favorite menu</string>
+
+<!--others-->
+<string name="share_text">I Would like to share this with you. Here You Can Download This Application from PlayStore</string>
+<string name="btn_retry">Retry</string>
+<string name="search">Search</string>
+<string name="search_text">Search&#8230;</string>
+<string name="press_again_to_exit">Press again to exit app</string>
+
+<!-- LOGIN -->
+<string name="button_login_with_facebook">Login with facebook</string>
+<string name="button_login_with_google">Login with google</string>
 </resources>
