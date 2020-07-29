@@ -7,4 +7,5 @@ public class User implements Serializable {
     public String userName;
     public String userImageUrl;
     public int userPomodoro;
+    public String tokenId;
 }

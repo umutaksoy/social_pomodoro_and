@@ -4,47 +4,56 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.Typeface;
-import android.media.Image;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.appcompat.app.ActionBar;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 import com.bumptech.glide.Glide;
+import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.badge.BadgeDrawable;
-import com.google.android.material.badge.BadgeUtils;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.sosimple.furtle.R;
+import com.sosimple.furtle.callbacks.CallBackSignup;
 import com.sosimple.furtle.models.User;
+import com.sosimple.furtle.rests.RestAdapter;
+import com.sosimple.furtle.utils.Tools;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import ru.nikartm.support.BadgePosition;
 import ru.nikartm.support.ImageBadgeView;
 
@@ -67,8 +76,9 @@ public class ActivityRoom extends AppCompatActivity {
     private CountDownTimer countDownTimer;
     boolean bCountDownIsNeededToSet = true;
 
+    boolean bShowErrorMessage = false;
+
     //user variables
-    boolean bIsUserLoggedIn = false;
     User myUser;
     //profile picture
     ImageBadgeView myImage;
@@ -76,7 +86,7 @@ public class ActivityRoom extends AppCompatActivity {
     TextView myUserText;
 
     //room's users
-    List<User> roomUsers;
+//    List<User> roomUsers;
     LinearLayout user1, user2, user3, user4, user5, user6, user7, user8;
     LinearLayout user9, user10, user11, user12, user13, user14, user15, user16;
     ImageBadgeView user1image, user2image, user3image, user4image;
@@ -90,10 +100,20 @@ public class ActivityRoom extends AppCompatActivity {
     LinearLayout signInPanel;
     private GoogleSignInClient mGoogleSignInClient;
     private static final int RC_SIGN_IN = 1;
+    private Call<CallBackSignup> callbackCall = null;
+
+    private String strBackendToken = null;
+    private boolean bJoinNeeded = false;
+    private boolean bFocusIsNeeded = false;
+    //socketio
+    private Socket mSocket = null;
+    private String strSocketJoin = "join", strSocketFocus = "focus", strSocketJoined = "joined";
+    private String strSocketFocusEnded = "focus ended", strSocketRoomInsidersChanged = "room insiders changed";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //TODO:log all details, especially errors (using tools.processLogs)
 
         setContentView(R.layout.activity_room);
 
@@ -115,6 +135,11 @@ public class ActivityRoom extends AppCompatActivity {
             }
         });
 
+        //initialization
+        myUser = new User();
+        strBackendToken = null;
+        bJoinNeeded = false;
+
         //TODO:if the room has less than 10 online users, show the bot users' data with random number of online users (for example bot users can be between 10-20)
 
         //USER'S COUNTDOWN AND BUTTONS
@@ -123,7 +148,6 @@ public class ActivityRoom extends AppCompatActivity {
         countdownText = (TextView) findViewById(R.id.countdownText);
 
         //User's badge settings
-        myUser = new User();
         myUserText = (TextView) findViewById(R.id.myUserTxt);
         myImage = (ImageBadgeView) findViewById(R.id.myprofile);
         updateBadge(myImage, getActualPomodoro());
@@ -184,6 +208,29 @@ public class ActivityRoom extends AppCompatActivity {
         signInPanel = (LinearLayout) findViewById(R.id.buttonsContainer);
         signInPanel.setVisibility(View.GONE);
 
+        showSignInButtons();
+
+        //update room badges as 0
+        updateBadge(user1image, 0);
+        updateBadge(user2image, 0);
+        updateBadge(user3image, 0);
+        updateBadge(user4image, 0);
+        updateBadge(user5image, 0);
+        updateBadge(user6image, 0);
+        updateBadge(user7image, 0);
+        updateBadge(user8image, 0);
+        updateBadge(user9image, 0);
+        updateBadge(user10image, 0);
+        updateBadge(user11image, 0);
+        updateBadge(user12image, 0);
+        updateBadge(user13image, 0);
+        updateBadge(user14image, 0);
+        updateBadge(user15image, 0);
+        updateBadge(user16image, 0);
+
+        //GOOGLE SIGN IN
+        initGoogleSignIn();
+
         //GET CHOOSEN HOUR AND CHOOSEN MINUTE DATA THAT SET IN PREVIOUS SCREEN
         Intent tmpIntent = getIntent();
 
@@ -215,86 +262,30 @@ public class ActivityRoom extends AppCompatActivity {
                 Log.e("umutplaypause", "play button onClick lcountdowntime : " + lCountdownLeftTime);
 
                 if (bIsPauseSituation){
+                    pauseCountdownTime();
                     //show play button
                     setPlayPauseButtonImage(true);
-                    //pause the countdown timer
-                    pauseCountdownTime();
+                    //reset the countdown timer
+                    setCountdownText(getCountdownMiliSecond());
+                    //try to send focus ended code to socket.io
+                    unfocusInRoom();
                 }else{
                     //show pause button
                     setPlayPauseButtonImage(false);
-
+/*This is for pause, now we are using stop instead of pause. So, reset the countdown timer
                     //start the countdown timer again
                     if (lCountdownLeftTime > 0)
                         startCountdownTime(lCountdownLeftTime);
+*/
+                    startCountdownTime(getCountdownMiliSecond());
+
+                    //try to send focus code to socket.io
+                    focusInRoom();
                 }
 
             }
 
         });
-
-        //Check the user is logged in or not
-        checkUserLoggedIn();
-
-        //If the user is logged in, Get the user's username, profile image
-        if (bIsUserLoggedIn){
-            //hide sign in button
-            hideSignInButtons();
-
-            myUser = getUserData();
-
-            if (myUser != null){
-                //update my user's profile picture
-                if (!myUser.userImageUrl.equals(""))
-                    updateProfileImage(myImage, myUser.userImageUrl);
-                //update my user's username
-                if (!myUser.userName.equals(""))
-                    updateUserName(myUserText, myUser.userName);
-                //send my actual pomodoro to room
-                sendActualPomodoro();
-            }
-
-        }
-
-        //If the user is logged in, join the room and get the room's users data
-        if (bIsUserLoggedIn){
-            roomUsers = getRoomActualData();
-            updateRoomActualDataPeriodically();
-        }
-
-        //If the user is not logged in, show the signin button to be able to join the room
-        if (!bIsUserLoggedIn){
-            showSignInButtons();
-
-            //update room badges as 0
-            updateBadge(user1image, 0);
-            updateBadge(user2image, 0);
-            updateBadge(user3image, 0);
-            updateBadge(user4image, 0);
-            updateBadge(user5image, 0);
-            updateBadge(user6image, 0);
-            updateBadge(user7image, 0);
-            updateBadge(user8image, 0);
-            updateBadge(user9image, 0);
-            updateBadge(user10image, 0);
-            updateBadge(user11image, 0);
-            updateBadge(user12image, 0);
-            updateBadge(user13image, 0);
-            updateBadge(user14image, 0);
-            updateBadge(user15image, 0);
-            updateBadge(user16image, 0);
-        }
-
-        //GOOGLE SIGN IN
-        // Configure sign-in to request the user's ID, email address, and basic
-        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-        // Build a GoogleSignInClient with the options specified by gso.
-        mGoogleSignInClient = GoogleSignIn.getClient(context, gso);
-        SignInButton signInButton = findViewById(R.id.sign_in_button);
-        signInButton.setSize(SignInButton.SIZE_STANDARD);
-        signInButton.setOnClickListener(view -> googleSignIn());
 
         //TOOLBAR WITH BACK BUTTON
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -307,6 +298,31 @@ public class ActivityRoom extends AppCompatActivity {
             getSupportActionBar().setTitle("");
         }
 
+    }
+
+    private void initGoogleSignIn() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("1066845752646-p4rhfb1vebfrkdm4c3l7v7h5028t77mq.apps.googleusercontent.com")
+                .requestEmail()
+                .build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(context, gso);
+
+        //try to check the user is signed in or not, silently
+        mGoogleSignInClient.silentSignIn()
+                .addOnCompleteListener(
+                        this,
+                        new OnCompleteListener<GoogleSignInAccount>() {
+                            @Override
+                            public void onComplete(@NonNull Task<GoogleSignInAccount> task) {
+                                handleSignInResult(task);
+                            }
+                        });
+
+        //add google sign in button to view
+        SignInButton signInButton = findViewById(R.id.sign_in_button);
+        signInButton.setSize(SignInButton.SIZE_STANDARD);
+        signInButton.setOnClickListener(view -> googleSignIn());
 
     }
 
@@ -348,6 +364,13 @@ public class ActivityRoom extends AppCompatActivity {
             pauseCountdownTime();
         }
 
+        if (mSocket != null){
+            mSocket.disconnect();
+            mSocket.off(strSocketJoin);
+            mSocket.off(strSocketJoined, onJoined);
+            mSocket.off(strSocketRoomInsidersChanged, roomInsidersChanged);
+        }
+
 //        showInterstitialAd();
         // code here to show dialog
         super.onBackPressed();  // optional depending on your needs
@@ -361,11 +384,27 @@ public class ActivityRoom extends AppCompatActivity {
             pauseCountdownTime();
         }
 
+        if (callbackCall != null) {
+
+            if (callbackCall.isCanceled()){
+                this.callbackCall.cancel();
+            }
+
+        }
+
+        if (mSocket != null){
+            mSocket.disconnect();
+            mSocket.off(strSocketJoin);
+            mSocket.off(strSocketJoined, onJoined);
+            mSocket.off(strSocketRoomInsidersChanged, roomInsidersChanged);
+        }
+
         super.onDestroy();
     }
 
     void finishWorkingResting(){
-        //TODO: play the gong sound
+        //play the gong sound
+        ringTheBell();
 
         //reset the countdown timer
         bCountDownIsNeededToSet = true;
@@ -385,15 +424,11 @@ public class ActivityRoom extends AppCompatActivity {
             setCountdownText(lCountdownLeftTime);
         }else{
             //the user finished the working time, it is the resting time for now
-
             increaseActualPomodoro();
-            sendActualPomodoro();
-            getRoomActualData();
 
             //start countdown automatically for 5 min resting time
             startCountdownTime(5 * 60 * 1000);
         }
-
 
     }
 
@@ -464,7 +499,7 @@ public class ActivityRoom extends AppCompatActivity {
 
     void pauseCountdownTime(){
         countDownTimer.cancel();
-        setPlayPauseButtonImage(false);
+        setPlayPauseButtonImage(true);
     }
 
     void increaseActualPomodoro(){
@@ -518,201 +553,200 @@ public class ActivityRoom extends AppCompatActivity {
 
     }
 
-    void sendActualPomodoro(){
-        //TODO:send the user's actual pomodoro to the backend
+    void updateRoomActualData(List<User> tmpUsers, int iPage){
 
-    }
+        boolean bIsNoUser = false;
 
-    List<User> getRoomActualData(){
-        //TODO:get the room's actual data
-        //the number of online users, online users' profile pictures, usernames, actual pomodoros
-        List<User> tmpRoomUsers = null;
+        if (tmpUsers == null){
+            bIsNoUser = true;
+        }else if(tmpUsers.size() == 0){
+            bIsNoUser = true;
+        }
 
-        return tmpRoomUsers;
-    }
-
-    void updateRoomActualData(int iPage){
-        roomUsers = getRoomActualData();
-
-        if (roomUsers == null)
+        if (bIsNoUser){
+            //hide users
+            user1.setVisibility(View.INVISIBLE);
+            user2.setVisibility(View.INVISIBLE);
+            user3.setVisibility(View.INVISIBLE);
+            user4.setVisibility(View.INVISIBLE);
+            user5.setVisibility(View.INVISIBLE);
+            user6.setVisibility(View.INVISIBLE);
+            user7.setVisibility(View.INVISIBLE);
+            user8.setVisibility(View.INVISIBLE);
+            user9.setVisibility(View.INVISIBLE);
+            user10.setVisibility(View.INVISIBLE);
+            user11.setVisibility(View.INVISIBLE);
+            user12.setVisibility(View.INVISIBLE);
+            user13.setVisibility(View.INVISIBLE);
+            user14.setVisibility(View.INVISIBLE);
+            user15.setVisibility(View.INVISIBLE);
+            user16.setVisibility(View.INVISIBLE);
+            sendToastMessage("There is no one in the room");
             return;
 
+        }
+
+        Log.e("umutsocket", "updateRoomActualData list size : " + tmpUsers.size());
+
         //user1
-        if (roomUsers.size() >= iPage * 16){
-            updateUserName(user1text, roomUsers.get(iPage * 16).userName);
-            updateProfileImage(user1image, roomUsers.get(iPage * 16).userImageUrl);
-            updateBadge(user1image, roomUsers.get(iPage * 16).userPomodoro);
+        if (tmpUsers.size() > iPage * 16){
+            updateUserName(user1text, tmpUsers.get(iPage * 16).userName);
+            updateProfileImage(user1image, tmpUsers.get(iPage * 16).userImageUrl);
+            updateBadge(user1image, tmpUsers.get(iPage * 16).userPomodoro);
         }else{
             //hide user1
             user1.setVisibility(View.INVISIBLE);
         }
 
         //user2
-        if (roomUsers.size() >= iPage * 16 + 1){
-            updateUserName(user2text, roomUsers.get(iPage * 16 + 1).userName);
-            updateProfileImage(user2image, roomUsers.get(iPage * 16 + 1).userImageUrl);
-            updateBadge(user2image, roomUsers.get(iPage * 16 + 1).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 1){
+            updateUserName(user2text, tmpUsers.get(iPage * 16 + 1).userName);
+            updateProfileImage(user2image, tmpUsers.get(iPage * 16 + 1).userImageUrl);
+            updateBadge(user2image, tmpUsers.get(iPage * 16 + 1).userPomodoro);
         }else{
             //hide user2
             user2.setVisibility(View.INVISIBLE);
         }
 
         //user3
-        if (roomUsers.size() >= iPage * 16 + 2){
-            updateUserName(user3text, roomUsers.get(iPage * 16 + 2).userName);
-            updateProfileImage(user3image, roomUsers.get(iPage * 16 + 2).userImageUrl);
-            updateBadge(user3image, roomUsers.get(iPage * 16 + 2).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 2){
+            updateUserName(user3text, tmpUsers.get(iPage * 16 + 2).userName);
+            updateProfileImage(user3image, tmpUsers.get(iPage * 16 + 2).userImageUrl);
+            updateBadge(user3image, tmpUsers.get(iPage * 16 + 2).userPomodoro);
         }else{
             //hide user3
             user3.setVisibility(View.INVISIBLE);
         }
 
         //user4
-        if (roomUsers.size() >= iPage * 16 + 3){
-            updateUserName(user4text, roomUsers.get(iPage * 16 + 3).userName);
-            updateProfileImage(user4image, roomUsers.get(iPage * 16 + 3).userImageUrl);
-            updateBadge(user4image, roomUsers.get(iPage * 16 + 3).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 3){
+            updateUserName(user4text, tmpUsers.get(iPage * 16 + 3).userName);
+            updateProfileImage(user4image, tmpUsers.get(iPage * 16 + 3).userImageUrl);
+            updateBadge(user4image, tmpUsers.get(iPage * 16 + 3).userPomodoro);
         }else{
             //hide user4
             user4.setVisibility(View.INVISIBLE);
         }
 
         //user5
-        if (roomUsers.size() >= iPage * 16 + 4){
-            updateUserName(user5text, roomUsers.get(iPage * 16 + 4).userName);
-            updateProfileImage(user5image, roomUsers.get(iPage * 16 + 4).userImageUrl);
-            updateBadge(user5image, roomUsers.get(iPage * 16 + 4).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 4){
+            updateUserName(user5text, tmpUsers.get(iPage * 16 + 4).userName);
+            updateProfileImage(user5image, tmpUsers.get(iPage * 16 + 4).userImageUrl);
+            updateBadge(user5image, tmpUsers.get(iPage * 16 + 4).userPomodoro);
         }else{
             //hide user5
             user5.setVisibility(View.INVISIBLE);
         }
 
         //user6
-        if (roomUsers.size() >= iPage * 16 + 5){
-            updateUserName(user6text, roomUsers.get(iPage * 16 + 5).userName);
-            updateProfileImage(user6image, roomUsers.get(iPage * 16 + 5).userImageUrl);
-            updateBadge(user6image, roomUsers.get(iPage * 16 + 5).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 5){
+            updateUserName(user6text, tmpUsers.get(iPage * 16 + 5).userName);
+            updateProfileImage(user6image, tmpUsers.get(iPage * 16 + 5).userImageUrl);
+            updateBadge(user6image, tmpUsers.get(iPage * 16 + 5).userPomodoro);
         }else{
             //hide user6
             user6.setVisibility(View.INVISIBLE);
         }
 
         //user7
-        if (roomUsers.size() >= iPage * 16 + 6){
-            updateUserName(user7text, roomUsers.get(iPage * 16 + 6).userName);
-            updateProfileImage(user7image, roomUsers.get(iPage * 16 + 6).userImageUrl);
-            updateBadge(user7image, roomUsers.get(iPage * 16 + 6).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 6){
+            updateUserName(user7text, tmpUsers.get(iPage * 16 + 6).userName);
+            updateProfileImage(user7image, tmpUsers.get(iPage * 16 + 6).userImageUrl);
+            updateBadge(user7image, tmpUsers.get(iPage * 16 + 6).userPomodoro);
         }else{
             //hide user7
             user7.setVisibility(View.INVISIBLE);
         }
 
         //user8
-        if (roomUsers.size() >= iPage * 16 + 7){
-            updateUserName(user8text, roomUsers.get(iPage * 16 + 7).userName);
-            updateProfileImage(user8image, roomUsers.get(iPage * 16 + 7).userImageUrl);
-            updateBadge(user8image, roomUsers.get(iPage * 16 + 7).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 7){
+            updateUserName(user8text, tmpUsers.get(iPage * 16 + 7).userName);
+            updateProfileImage(user8image, tmpUsers.get(iPage * 16 + 7).userImageUrl);
+            updateBadge(user8image, tmpUsers.get(iPage * 16 + 7).userPomodoro);
         }else{
             //hide user8
             user8.setVisibility(View.INVISIBLE);
         }
 
         //user9
-        if (roomUsers.size() >= iPage * 16 + 8){
-            updateUserName(user9text, roomUsers.get(iPage * 16 + 8).userName);
-            updateProfileImage(user9image, roomUsers.get(iPage * 16 + 8).userImageUrl);
-            updateBadge(user9image, roomUsers.get(iPage * 16 + 8).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 8){
+            updateUserName(user9text, tmpUsers.get(iPage * 16 + 8).userName);
+            updateProfileImage(user9image, tmpUsers.get(iPage * 16 + 8).userImageUrl);
+            updateBadge(user9image, tmpUsers.get(iPage * 16 + 8).userPomodoro);
         }else{
             //hide user9
             user9.setVisibility(View.INVISIBLE);
         }
 
         //user10
-        if (roomUsers.size() >= iPage * 16 + 9){
-            updateUserName(user10text, roomUsers.get(iPage * 16 + 9).userName);
-            updateProfileImage(user10image, roomUsers.get(iPage * 16 + 9).userImageUrl);
-            updateBadge(user10image, roomUsers.get(iPage * 16 + 9).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 9){
+            updateUserName(user10text, tmpUsers.get(iPage * 16 + 9).userName);
+            updateProfileImage(user10image, tmpUsers.get(iPage * 16 + 9).userImageUrl);
+            updateBadge(user10image, tmpUsers.get(iPage * 16 + 9).userPomodoro);
         }else{
             //hide user10
             user10.setVisibility(View.INVISIBLE);
         }
 
         //user11
-        if (roomUsers.size() >= iPage * 16 + 10){
-            updateUserName(user11text, roomUsers.get(iPage * 16 + 10).userName);
-            updateProfileImage(user11image, roomUsers.get(iPage * 16 + 10).userImageUrl);
-            updateBadge(user11image, roomUsers.get(iPage * 16 + 10).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 10){
+            updateUserName(user11text, tmpUsers.get(iPage * 16 + 10).userName);
+            updateProfileImage(user11image, tmpUsers.get(iPage * 16 + 10).userImageUrl);
+            updateBadge(user11image, tmpUsers.get(iPage * 16 + 10).userPomodoro);
         }else{
             //hide user11
             user11.setVisibility(View.INVISIBLE);
         }
 
         //user12
-        if (roomUsers.size() >= iPage * 16 + 11){
-            updateUserName(user12text, roomUsers.get(iPage * 16 + 11).userName);
-            updateProfileImage(user12image, roomUsers.get(iPage * 16 + 11).userImageUrl);
-            updateBadge(user12image, roomUsers.get(iPage * 16 + 11).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 11){
+            updateUserName(user12text, tmpUsers.get(iPage * 16 + 11).userName);
+            updateProfileImage(user12image, tmpUsers.get(iPage * 16 + 11).userImageUrl);
+            updateBadge(user12image, tmpUsers.get(iPage * 16 + 11).userPomodoro);
         }else{
             //hide user12
             user12.setVisibility(View.INVISIBLE);
         }
 
         //user13
-        if (roomUsers.size() >= iPage * 16 + 12){
-            updateUserName(user13text, roomUsers.get(iPage * 16 + 12).userName);
-            updateProfileImage(user13image, roomUsers.get(iPage * 16 + 12).userImageUrl);
-            updateBadge(user13image, roomUsers.get(iPage * 16 + 12).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 12){
+            updateUserName(user13text, tmpUsers.get(iPage * 16 + 12).userName);
+            updateProfileImage(user13image, tmpUsers.get(iPage * 16 + 12).userImageUrl);
+            updateBadge(user13image, tmpUsers.get(iPage * 16 + 12).userPomodoro);
         }else{
             //hide user13
             user13.setVisibility(View.INVISIBLE);
         }
 
         //user14
-        if (roomUsers.size() >= iPage * 16 + 13){
-            updateUserName(user14text, roomUsers.get(iPage * 16 + 13).userName);
-            updateProfileImage(user14image, roomUsers.get(iPage * 16 + 13).userImageUrl);
-            updateBadge(user14image, roomUsers.get(iPage * 16 + 13).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 13){
+            updateUserName(user14text, tmpUsers.get(iPage * 16 + 13).userName);
+            updateProfileImage(user14image, tmpUsers.get(iPage * 16 + 13).userImageUrl);
+            updateBadge(user14image, tmpUsers.get(iPage * 16 + 13).userPomodoro);
         }else{
             //hide user14
             user14.setVisibility(View.INVISIBLE);
         }
 
         //user15
-        if (roomUsers.size() >= iPage * 16 + 14){
-            updateUserName(user15text, roomUsers.get(iPage * 16 + 14).userName);
-            updateProfileImage(user15image, roomUsers.get(iPage * 16 + 14).userImageUrl);
-            updateBadge(user15image, roomUsers.get(iPage * 16 + 14).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 14){
+            updateUserName(user15text, tmpUsers.get(iPage * 16 + 14).userName);
+            updateProfileImage(user15image, tmpUsers.get(iPage * 16 + 14).userImageUrl);
+            updateBadge(user15image, tmpUsers.get(iPage * 16 + 14).userPomodoro);
         }else{
             //hide user15
             user15.setVisibility(View.INVISIBLE);
         }
 
         //user16
-        if (roomUsers.size() >= iPage * 16 + 15){
-            updateUserName(user16text, roomUsers.get(iPage * 16 + 15).userName);
-            updateProfileImage(user16image, roomUsers.get(iPage * 16 + 15).userImageUrl);
-            updateBadge(user16image, roomUsers.get(iPage * 16 + 15).userPomodoro);
+        if (tmpUsers.size() > iPage * 16 + 15){
+            updateUserName(user16text, tmpUsers.get(iPage * 16 + 15).userName);
+            updateProfileImage(user16image, tmpUsers.get(iPage * 16 + 15).userImageUrl);
+            updateBadge(user16image, tmpUsers.get(iPage * 16 + 15).userPomodoro);
         }else{
             //hide user16
             user16.setVisibility(View.INVISIBLE);
         }
-
-    }
-
-    void updateRoomActualDataPeriodically(){
-        int delaySecond = 60;
-
-        //get the Room Actual Data for each X seconds
-        Handler handler = new Handler();
-        int delay = delaySecond * 1000; //milliseconds
-
-        handler.postDelayed(new Runnable(){
-            public void run(){
-                updateRoomActualData(0);
-
-                handler.postDelayed(this, delay);
-            }
-        }, delay);
 
     }
 
@@ -758,43 +792,8 @@ public class ActivityRoom extends AppCompatActivity {
         txtUserName.setText(strUserName);
     }
 
-    void checkUserLoggedIn(){
-        bIsUserLoggedIn = false;
-
-        try {
-            SharedPreferences preferences = act.getPreferences(Context.MODE_PRIVATE);
-            bIsUserLoggedIn = preferences.getBoolean(getString(R.string.sharedpref_login), false);
-
-        }catch (Exception e){
-            Log.e("umutsharedpref", "checkUserLoggedIn patladi, detay : " + e.toString());
-        }
-
-    }
-
-    User getUserData(){
-
-        User tmpUser = null;
-
-        try {
-            SharedPreferences preferences = act.getPreferences(Context.MODE_PRIVATE);
-            bIsUserLoggedIn = preferences.getBoolean(getString(R.string.sharedpref_login), false);
-
-            if (bIsUserLoggedIn){
-                tmpUser = new User();
-                tmpUser.userEmail = preferences.getString(getString(R.string.sharedpref_email), "");
-                tmpUser.userName = preferences.getString(getString(R.string.sharedpref_name), "");
-                tmpUser.userImageUrl = preferences.getString(getString(R.string.sharedpref_image), "");
-                tmpUser.userPomodoro = getActualPomodoro();
-            }
-
-        }catch (Exception e){
-            Log.e("umutsharedpref", "checkUserLoggedIn patladi, detay : " + e.toString());
-        }
-
-        return tmpUser;
-    }
-
     void saveUserLoggedIn(){
+        //writes the user data to sharedpref
 
         try {
 
@@ -816,6 +815,9 @@ public class ActivityRoom extends AppCompatActivity {
     }
 
     void googleSignIn(){
+        //user is pressed the google sign in button, now you can show all errors to user
+        bShowErrorMessage = true;
+        //triggered when google sign in button is clicked. opens google account popup
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
@@ -837,17 +839,23 @@ public class ActivityRoom extends AppCompatActivity {
     }
 
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
-
-        Log.e("umutsignin", "handleSignInResult calisiyor");
+        //the user signed in successfully, you can access all account details for now
+        Log.e("umutgoogle", "handleSignInResult calisiyor");
 
         try {
+            myUser.tokenId = null;
+
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
 
-            Log.e("umutsignin", "handleSignInResult acount alindi");
+            Log.e("umutgoogle", "handleSignInResult acount alindi");
 
             if (account != null){
-                Log.e("umutsignin", "handleSignInResult account nulldan farkli");
-                // Signed in successfully, show authenticated UI.
+                Log.e("umutgoogle", "handleSignInResult account nulldan farkli");
+                myUser.tokenId = account.getIdToken();
+
+                Log.e("umutgoogle", "handleSignInResult google token bu geldi : " + account.getIdToken());
+
+                myUser.userPomodoro = getActualPomodoro();
                 myUser.userEmail = account.getEmail();
                 myUser.userName = account.getDisplayName();
 
@@ -857,23 +865,36 @@ public class ActivityRoom extends AppCompatActivity {
                     myUser.userImageUrl = "";
                 }
 
-                saveUserLoggedIn();
-                updateProfileImage(myImage, myUser.userImageUrl);
-                updateUserName(myUserText, myUser.userName);
-                hideSignInButtons();
-                updateRoomActualData(0);
+                if (myUser.tokenId != null){
+                    Log.e("umutgoogle", "handleSignInResult token nulldan farkli, backend calisacak");
+                    //save user data to sharedpref
+                    saveUserLoggedIn();
+                    //update user's profile image
+                    updateProfileImage(myImage, myUser.userImageUrl);
+                    //update user's username textfield
+                    updateUserName(myUserText, myUser.userName);
+                    //the user is signed in, no need to show sign in button, hide it
+                    hideSignInButtons();
+                    //send signed in user data to backend (to join and use room feature)
+                    new Handler().postDelayed(this::postGoogleSignIn, 200);
+                }else{
+                    Log.e("umutgoogle", "handleSignInResult token null gelmis, backend calismayacak");
+                    sendToastMessage("Unable to sign in, ERRORCODE 1");
+                }
 
-                new Handler().postDelayed(this::requestPostData, 200);
             }else{
-                Log.e("umutsignin", "handleSignInResult account null geldi");
+                Log.e("umutgoogle", "handleSignInResult account null geldi");
+                sendToastMessage("Unable to sign in, ERRORCODE 2");
             }
 
         } catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
-            Log.e("umutsignin", "handleSignInResult patladi, detay : " + e.toString());
+            Log.e("umutgoogle", "handleSignInResult patladi, detay : " + e.toString());
+            sendToastMessage("Unable to sign in, ERRORCODE 3");
         }
 
+        bShowErrorMessage = true;
     }
 
     void showSignInButtons(){
@@ -887,18 +908,335 @@ public class ActivityRoom extends AppCompatActivity {
         signInPanel.setVisibility(View.GONE);
     }
 
-    private void requestPostData() {
-        //TODO:bu metodun backende kullanici kaydi atmasi saglanacak,
-        // benzer yapi fragmenaccount.java dosyasinda var
+    private void postGoogleSignIn(){
+        JSONArray paramArray = new JSONArray();
+        JSONObject paramObject = new JSONObject();
+
+        try {
+            paramObject.put("tokenId", myUser.tokenId);
+            paramArray.put(paramObject);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.e("umutgoogle", "postGoogleSignIn patladi, detay : " + e.toString());
+            sendToastMessage("Unable to login, ERRORCODE 4");
+            return;
+        }
+
+        this.callbackCall = RestAdapter.createAPI().signInGoogle(paramArray.toString());
+        this.callbackCall.enqueue(new Callback<CallBackSignup>() {
+            public void onResponse(Call<CallBackSignup> call, Response<CallBackSignup> response) {
+
+                int iResponseCode = 0;
+                strBackendToken = null;
+
+                try {
+                    iResponseCode = response.code();
+                    Log.e("umutsocket", "signin onResponse code : " + iResponseCode);
+                } catch (Exception e) {
+                    iResponseCode = 0;
+                    Tools.processLogs(2, "kullanici kayit isleminden response code alinamadi, detay : " + e.toString());
+                }
+
+                //operation is successful, get the token from response json
+                try {
+                    if (iResponseCode == 201) {
+                        assert response.body() != null;
+                        strBackendToken = response.body().token;
+                        Tools.processLogs(0, "backend google signin basarili, backend session token : " + response.body().token);
+                    } else {
+                        sendToastMessage("Unable to login, ERRORCODE 5");
+                        onFailRequest();
+                        Tools.processLogs(2, "backend google signin hatasi, response sonucu, kod : " + iResponseCode);
+                        assert response.errorBody() != null;
+                        Log.e("umutsocket", "signin onResponse error body : " + response.errorBody().toString());
+                    }
+
+                }catch (Exception e){
+                    sendToastMessage("Unable to login, ERRORCODE 6");
+                    Tools.processLogs(2, "kullanici kayit isleminden response code sonrasi hata, detay : " + e.toString());
+                }
+
+                if (strBackendToken != null){
+                    bJoinNeeded = true;
+                    bFocusIsNeeded = true;
+                    initSocket();
+                }
+
+            }
+
+            public void onFailure (Call < CallBackSignup > call, Throwable t){
+                t.printStackTrace();
+                sendToastMessage("Unable to login, ERRORCODE 7");
+                Log.e("umutsignup2", "signup api onFailure " + t.getMessage());
+                strBackendToken = null;
+                onFailRequest();
+            }
+
+        });
 
     }
 
     private void joinRoom(){
-        //TODO:kullanici login oldu ve calismaya basladi, backend tarafinda odaya giris yaptir
+        Log.e("umutsocket", "socketio joinRoom calisiyor");
+
+        if (mSocket != null){
+            Log.e("umutsocket", "socketio joinRoom socket nulldan farkli");
+
+            if (mSocket.connected()){
+                mSocket.emit(strSocketJoin, 1);
+                bJoinNeeded = false;
+                Log.e("umutsocket", "socketio joinRoom socket bagli, join komutu gonderiliyor");
+            }else {
+                Log.e("umutsocket", "socketio joinRoom socket bagli degil, once socket baglanip sonra join yapilacak");
+            }
+
+        }else{
+            Log.e("umutsocket", "joinRoom socket null geldi ");
+        }
+
     }
 
-    private void exitRoom(){
-        //TODO:kullanici ekrandan cikti veya logout oldu, backend tarafinda odadan cikisini yaptir
+    private void focusInRoom(){
+
+        if (mSocket != null){
+
+            if (mSocket.connected()){
+
+                if (!bIsPauseSituation){
+                    mSocket.emit(strSocketFocus);
+                    bFocusIsNeeded = false;
+                    Log.e("umutsocket", "focusInRoom focus komutu socket tarafına gonderildi");
+                }
+
+            }else{
+                Log.e("umutsocket", "focusInRoom socket baglanmamis, focus yapilamadi ");
+            }
+
+        }else{
+            Log.e("umutsocket", "focusInRoom socket null geldi, focus yapilamadi ");
+        }
+
+    }
+
+    private void unfocusInRoom(){
+
+        if (mSocket != null){
+
+            if (mSocket.connected()){
+
+                if (!bIsPauseSituation){
+                    mSocket.emit(strSocketFocusEnded);
+                    Log.e("umutsocket", "unfocusInRoom focus ended komutu socket tarafına gonderildi");
+                }
+
+            }else{
+                Log.e("umutsocket", "unfocusInRoom socket baglanmamis, focus ended yapilamadi ");
+            }
+
+        }else{
+            Log.e("umutsocket", "unfocusInRoom socket null geldi, focus ended yapilamadi ");
+        }
+
+    }
+
+    private void onFailRequest(){
+        //TODO:burada kullaniciya kayit isleminin basarisiz oldugu mesajini vermek lazim
+        Log.e("umutsignup", "onFailRequest calisti");
+    }
+
+    private void getRoomDataAndUpdateRoom(String strJSON){
+        //TODO:room data json formati = [{"email":"muhammetumutaksoy@gmail.com","pp":"https:\/\/cdn.sosimple.tech\/profile_photos\/default.png","focusCount":"0"}]
+        int iTmpLimit = 0, iMaxUserLimit = 100;
+
+        List<User> tmpRoomUsers = new ArrayList<>();
+
+        try {
+            JSONArray mainJson = new JSONArray(strJSON);
+
+            Log.e("umutsocket", "getRoomDataAndUpdateRoom jsonarray length : " + mainJson.length());
+
+            for (int i = 0; i < mainJson.length(); i++){
+
+                if (iTmpLimit < iMaxUserLimit){
+                    iTmpLimit++;
+                    String strEmail = mainJson.getJSONObject(i).getString("email");
+                    String strProfileImage = mainJson.getJSONObject(i).getString("pp");
+                    int iPomodoroCount = tryParseInt(mainJson.getJSONObject(i).getString("focusCount"));
+
+                    if (!strEmail.equals(myUser.userEmail)){
+                        User tmpUser = new User();
+                        tmpUser.userEmail = strEmail;
+                        tmpUser.userName = strEmail.substring(0, strEmail.indexOf("@"));
+                        tmpUser.userImageUrl = strProfileImage;
+                        tmpUser.userPomodoro = iPomodoroCount;
+                        tmpRoomUsers.add(tmpUser);
+                        Log.e("umutsocket", "getUserDataFromRoomJSON: " + i + ". kaydin emaili : " + strEmail);
+                        Tools.processLogs(2, "room data email bu geldi : " + strEmail);
+                    }
+
+                }
+
+            }
+
+        } catch (JSONException e) {
+            Tools.processLogs(2, "Jsondan email alirken hata olustu, hata detayi : " + e.toString());
+            e.printStackTrace();
+        }
+
+        updateRoomActualData(tmpRoomUsers,0);
+    }
+
+    private Emitter.Listener onJoined = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.e("umutsocket", "onjoined listener calisiyor");
+                    Log.e("umutsocket", "onjoined roomid parametre olarak gelmesi lazim, ilk parametre : " + args[0]);
+
+                    if (bFocusIsNeeded){
+                        focusInRoom();
+                    }
+
+                }
+
+            });
+        }
+    };
+
+    private Emitter.Listener roomInsidersChanged = new Emitter.Listener() {
+        @Override
+        public void call(final Object... args) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.e("umutsocket", "roomInsidersChanged listener calisiyor");
+/*
+                    for (Object arg : args) {
+                        Log.e("umutsocket", "roomInsidersChanged gelen parametreler : " + arg);
+                    }
+*/
+                    //args[0] has user data in room, try to get that data from it
+                    try {
+                        getRoomDataAndUpdateRoom(args[0].toString());
+                    }catch (Exception e){
+                        sendToastMessage("Unable to communicate with room, ERRORCODE 8");
+                        Log.e("umutsocket", "roomInsidersChanged room data parametre hatasi, detay : " + e.toString());
+                    }
+
+                }
+
+            });
+
+        }
+
+    };
+
+    private void initSocket(){
+        Log.e("umutsocket", "initSocket calisiyor ");
+
+        if (strBackendToken == null){
+            Log.e("umutsocket", "initSocket backend token null geldi, socket islemleri yapilmayacak");
+            return;
+        }
+
+        IO.Options opts = new IO.Options();
+        opts.forceNew = true;
+        opts.query = "credentials=" + strBackendToken;
+
+        try {
+            mSocket = IO.socket("https://furtle.sosimple.tech", opts);
+            mSocket.on(strSocketJoined, onJoined);
+            mSocket.on(strSocketRoomInsidersChanged, roomInsidersChanged);
+
+            mSocket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    Log.e("umutsocket", "init socket: connected to server");
+
+                    if (bJoinNeeded){
+                        joinRoom();
+                    }
+
+                }
+            });
+
+            mSocket.on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    Log.e("umutsocket", "init socket: disconnected from the server");
+                }
+            });
+
+            mSocket.on(Socket.EVENT_CONNECT_ERROR, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    Log.e("umutsocket", "init socket: connection error");
+                    sendToastMessage("Unable to connect with room, ERRORCODE 9");
+                }
+            });
+
+            mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    Log.e("umutsocket", "init socket : connection timeout");
+                    sendToastMessage("Room connection timeout, ERRORCODE 10");
+                }
+            });
+
+            mSocket.on(Socket.EVENT_ERROR, new Emitter.Listener() {
+                @Override
+                public void call(Object... args) {
+                    sendToastMessage("Unexpected connection error, ERRORCODE 11");
+
+                    for (Object arg : args)
+                        Log.e("umutsocket", "init socket error, detay : " + arg);
+                }
+            });
+
+            mSocket.connect();
+        } catch (Exception e) {
+            Log.e("umutsocket", "initSocket patladi, hata detayi : " + e.toString());
+            e.printStackTrace();
+        }
+
+    }
+
+    int tryParseInt(String value) {
+        int iTmp = 0;
+
+        try {
+            iTmp = Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            iTmp = 0;
+        }
+
+        return iTmp;
+    }
+
+    private void sendToastMessage(String strMessage){
+
+        if (bShowErrorMessage){
+            Context context = getApplicationContext();
+            int duration = Toast.LENGTH_LONG;
+
+            Toast toast = Toast.makeText(context, strMessage, duration);
+            toast.show();
+        }
+
+    }
+
+    private void ringTheBell(){
+
+        try {
+            MediaPlayer mPlayer = MediaPlayer.create(ActivityRoom.this, R.raw.ding_bell_sound);
+            mPlayer.start();
+        }catch (Exception e){
+            Log.e("umut", "ringTheBell hatasi, detay : " + e.toString());
+        }
+
     }
 
 }

@@ -54,6 +54,7 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation "com.squareup.retrofit2:converter-scalars:$retrofit_version"
     implementation 'com.google.android.gms:play-services-ads:19.1.0'
     implementation 'com.google.android.gms:play-services-auth:18.0.0'
     implementation 'com.google.firebase:firebase-core:17.4.0'
@@ -71,6 +72,10 @@ dependencies {
     implementation 'com.duolingo.open:rtl-viewpager:2.0.0'
     //for badge
     implementation 'com.github.nikartm:image-support:1.0.5'
+    //socket io
+    implementation ('com.github.nkzawa:socket.io-client:0.6.0',{
+        exclude group:'org.json', module:'json'
+    })
     //glide image loader
     implementation 'com.github.bumptech.glide:glide:4.10.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.10.0'
