@@ -42,19 +42,10 @@ public class MainActivity extends AppCompatActivity {
     int pager_number = 2;
     MenuItem prevMenuItem;
 
-//    ImageButton btn_search;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Tools.getTheme(this);
-/*RTL MODE
-        if (AppConfig.ENABLE_RTL_MODE) {
-            setContentView(R.layout.activity_main_rtl);
-        } else {
-            setContentView(R.layout.activity_main);
-        }
-*/
         setContentView(R.layout.activity_main);
 
         view = findViewById(android.R.id.content);
@@ -63,17 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
         preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         androidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
-/*RTL MODE
-        if (AppConfig.ENABLE_RTL_MODE) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-            }
-        }
-*/
 
-/*ADMOB GDPR
-        GDPR.updateConsentStatus(this);
-*/
         AppBarLayout appBarLayout = findViewById(R.id.appbarLayout);
         ((CoordinatorLayout.LayoutParams) appBarLayout.getLayoutParams()).setBehavior(new AppBarLayoutBehavior());
 
@@ -85,21 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
         navigation = findViewById(R.id.navigation);
         navigation.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
-/*RTL MODE
-        if (AppConfig.ENABLE_RTL_MODE) {
-            initRTLViewPager();
-        } else {
-            initViewPager();
-        }
-*/
         initViewPager();
-
-/*NOTIFICATION
-        onReceiveNotification();
-
-        NotificationUtils.oneSignalNotificationHandler(this, getIntent());
-        NotificationUtils.fcmNotificationHandler(this, getIntent());
-*/
 
         initToolbarIcon();
 
@@ -155,15 +122,6 @@ public class MainActivity extends AppCompatActivity {
     public void initToolbarIcon() {
         findViewById(R.id.toolbar).setBackgroundColor(getResources().getColor(R.color.colorToolbarDark));
         navigation.setBackgroundColor(getResources().getColor(R.color.colorToolbarDark));
-/*LIGHT/DARK THEME SELECTION, I AM USING DARK THEME FOR NOW
-        if (sharedPref.getIsDarkTheme()) {
-            findViewById(R.id.toolbar).setBackgroundColor(getResources().getColor(R.color.colorToolbarDark));
-            navigation.setBackgroundColor(getResources().getColor(R.color.colorToolbarDark));
-        } else {
-            findViewById(R.id.toolbar).setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-        }
-*/
-
     }
 
     public class MyAdapter extends FragmentPagerAdapter {

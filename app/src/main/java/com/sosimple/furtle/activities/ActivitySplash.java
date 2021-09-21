@@ -32,14 +32,7 @@ public class ActivitySplash extends AppCompatActivity {
 
 
         sharedPref = new SharedPref(this);
-/*FOR DARK/LIGHT THEME SELECTION
-        img_splash = findViewById(R.id.img_splash);
-        if (sharedPref.getIsDarkTheme()) {
-            img_splash.setImageResource(R.drawable.bg_splash_dark);
-        } else {
-            img_splash.setImageResource(R.drawable.bg_splash_default);
-        }
-*/
+
         progressBar = findViewById(R.id.progressBar);
         progressBar.setVisibility(View.VISIBLE);
 
@@ -68,11 +61,6 @@ public class ActivitySplash extends AppCompatActivity {
                 } else {
                     Intent a = new Intent(getApplicationContext(), MainActivity.class);
                     startActivity(a);
-/*THIS IS FOR SHOWING SPECIFIC CONTENT THAT COMES FROM NOTIFICATION
-                    Intent b = new Intent(getApplicationContext(), ActivityNotificationDetail.class);
-                    b.putExtra("id", id);
-                    startActivity(b);
-*/
                     finish();
                 }
             }

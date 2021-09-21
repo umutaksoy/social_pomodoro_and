@@ -39,7 +39,6 @@ public class FragmentAccount extends Fragment {
 
     View root_view;
     private RecyclerView recyclerView;
-    //    private AdapterRecent adapterRecent;
     private GoogleSignInClient mGoogleSignInClient;
     private static final int RC_SIGN_IN = 1;
     private String signUpEmail, signUpUsername, signUpPassword, signUpCaptcha;
@@ -161,7 +160,7 @@ public class FragmentAccount extends Fragment {
         this.callbackCall.enqueue(new Callback<CallBackSignup>() {
             public void onResponse(Call<CallBackSignup> call, Response<CallBackSignup> response) {
 
-                Log.e("umutsignup", "response sonucu : " + response.toString());
+                Log.e("umutsignup", "response result : " + response.toString());
                 Log.e("umutsignup", "response header : " + response.headers().toString());
                 Log.e("umutsignup", "response message : " + response.message());
 
@@ -174,18 +173,11 @@ public class FragmentAccount extends Fragment {
                 CallBackSignup responseHome = response.body();
 
                 if (responseHome == null) {
-                    Log.e("umutsignup", "onResponse: response null geldi ");
+                    Log.e("umutsignup", "onResponse: response is null");
                     onFailRequest();
                     return;
 
                 }
-/*
-                else if(!responseHome.status.equals("ok")) {
-                    Log.e("umutsignup", "onResponse: response ok gelmedi " + responseHome.status);
-                    onFailRequest();
-                    return;
-                }
-*/
                 onSuccessRequest();
             }
 
@@ -199,11 +191,11 @@ public class FragmentAccount extends Fragment {
     }
 
     private void onFailRequest(){
-        Log.e("umutsignup", "onFailRequest calisti");
+        Log.e("umutsignup", "onFailRequest method is running");
     }
 
     private void onSuccessRequest(){
-        Log.e("umutsignup", "onSuccessRequest calisti");
+        Log.e("umutsignup", "onSuccessRequest method is running");
     }
 
 }

@@ -16,11 +16,6 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         mInstance = this;
-/*
-        OneSignal.startInit(this)
-                .unsubscribeWhenNotificationsAreDisabled(true)
-                .init();
-*/
     }
 
     @Override

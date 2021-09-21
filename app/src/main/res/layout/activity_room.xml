@@ -4,6 +4,7 @@
     xmlns:ads="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:keepScreenOn="true"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -57,14 +58,7 @@
                     </RelativeLayout>
 
                 </LinearLayout>
-                <!--
-                                    <ImageButton
-                                        android:id="@+id/btn_search"
-                                        android:layout_width="@dimen/spacing_xxlarge"
-                                        android:layout_height="@dimen/spacing_xxlarge"
-                                        android:background="?selectableItemBackgroundBorderless"
-                                        android:src="@drawable/ic_search" />
-                -->
+
             </LinearLayout>
 
         </androidx.appcompat.widget.Toolbar>
@@ -174,7 +168,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:weightSum="4">
+            android:weightSum="4"
+            android:visibility="gone">
 
             <!-- Row 1 -->
             <LinearLayout
@@ -192,10 +187,10 @@
                     android:layout_gravity="center_horizontal|center_vertical"
                     android:layout_margin="2dp"
                     android:orientation="vertical"
-                    >
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user1profile"
+                        android:id="@+id/userprofile1"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -210,7 +205,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user1name"
+                        android:id="@+id/username1"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -230,10 +225,11 @@
                     android:layout_weight="1"
                     android:layout_gravity="center_horizontal|center_vertical"
                     android:layout_margin="2dp"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user2profile"
+                        android:id="@+id/userprofile2"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -248,7 +244,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user2name"
+                        android:id="@+id/username2"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -268,10 +264,11 @@
                     android:layout_weight="1"
                     android:layout_gravity="center_horizontal|center_vertical"
                     android:layout_margin="2dp"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user3profile"
+                        android:id="@+id/userprofile3"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -286,7 +283,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user3name"
+                        android:id="@+id/username3"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -306,10 +303,11 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal|center_vertical"
                     android:layout_margin="2dp"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user4profile"
+                        android:id="@+id/userprofile4"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -324,7 +322,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user4name"
+                        android:id="@+id/username4"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -353,10 +351,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user5profile"
+                        android:id="@+id/userprofile5"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -371,7 +370,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user5name"
+                        android:id="@+id/username5"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -391,10 +390,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user6profile"
+                        android:id="@+id/userprofile6"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -409,7 +409,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user6name"
+                        android:id="@+id/username6"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -429,10 +429,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user7profile"
+                        android:id="@+id/userprofile7"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -447,7 +448,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user7name"
+                        android:id="@+id/username7"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -467,10 +468,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user8profile"
+                        android:id="@+id/userprofile8"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -485,7 +487,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user8name"
+                        android:id="@+id/username8"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -514,10 +516,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user9profile"
+                        android:id="@+id/userprofile9"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -532,7 +535,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user9name"
+                        android:id="@+id/username9"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -552,10 +555,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user10profile"
+                        android:id="@+id/userprofile10"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -570,7 +574,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user10name"
+                        android:id="@+id/username10"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -590,10 +594,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user11profile"
+                        android:id="@+id/userprofile11"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -608,7 +613,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user11name"
+                        android:id="@+id/username11"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -628,10 +633,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user12profile"
+                        android:id="@+id/userprofile12"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -646,7 +652,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user12name"
+                        android:id="@+id/username12"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -675,10 +681,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user13profile"
+                        android:id="@+id/userprofile13"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -693,7 +700,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user13name"
+                        android:id="@+id/username13"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -713,10 +720,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user14profile"
+                        android:id="@+id/userprofile14"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -731,7 +739,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user14name"
+                        android:id="@+id/username14"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -751,10 +759,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user15profile"
+                        android:id="@+id/userprofile15"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -769,7 +778,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user15name"
+                        android:id="@+id/username15"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -789,10 +798,11 @@
                     android:orientation="vertical"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:visibility="gone">
 
                     <ru.nikartm.support.ImageBadgeView
-                        android:id="@+id/user16profile"
+                        android:id="@+id/userprofile16"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         app:ibv_badgeValue="0"
@@ -807,7 +817,7 @@
                         android:src="@drawable/ic_nav_profile" />
 
                     <TextView
-                        android:id="@+id/user16name"
+                        android:id="@+id/username16"
                         android:text="@string/username_empty"
                         android:textAlignment="center"
                         android:textColor="@android:color/black"
@@ -820,7 +830,6 @@
                 </LinearLayout>
 
             </LinearLayout>
-
 
         </LinearLayout>
 
@@ -850,6 +859,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/loadingContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminate="false"
+                android:visibility="visible" />
         </LinearLayout>
 
     </FrameLayout>

@@ -2,11 +2,20 @@
 <resources>
 
     <!--app main color-->
-    <color name="colorPrimary">#E62117</color>
-    <color name="colorPrimaryDark">#BA1B12</color>
-    <color name="colorAccent">#ECA324</color>
+    <color name="colorPrimary">#0F1D24</color>
+    <color name="colorPrimaryDark">#0F1D24</color>
+    <color name="colorAccent">#222D36</color>
     <color name="colorBackgroundLight">#FFFFFF</color>
+    <!--
+        <color name="colorPrimary">#E62117</color>
+        <color name="colorPrimaryDark">#BA1B12</color>
+        <color name="colorAccent">#ECA324</color>
+        <color name="colorBackgroundLight">#FFFFFF</color>
 
+        <color name="colorStatusBarDark">#0F1D24</color>
+        <color name="colorToolbarDark">#222D36</color>
+        <color name="colorBackgroundDark">#101D24</color>
+        -->
     <!--dark theme color-->
     <color name="colorStatusBarDark">#0F1D24</color>
     <color name="colorToolbarDark">#222D36</color>
